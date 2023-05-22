@@ -1,0 +1,170 @@
+Option Explicit
+Public flag As Boolean 'check if users generate grade
+Dim IfSecondUserformShowed As Boolean
+
+################################################################
+Private Sub back_btn_Click() 'second userform-method
+    Me.MultiPage1.Pages(0).Visible = True
+    Me.MultiPage1.Pages(1).Visible = False
+End Sub
+
+################################################################
+Private Sub cancel_btn_Click() 'third userform-student preference
+    Me.MultiPage1.Pages(1).Visible = True
+    Me.MultiPage1.Pages(2).Visible = False
+End Sub
+
+################################################################
+Private Sub grade_btn_Click()
+    'check if users input file to analyze
+    On Error Resume Next
+    If IfFileImported = False Then
+        MsgBox "You haven't imported the data sheet."
+    End If
+    On Error GoTo 0
+    
+    '---------after imported data-------
+    'only can click once (flag = true if grade hv been generated
+    If flag Then
+        If IfSecondUserformShowed = True Then 'back to second page again so users can change grading preference
+            Me.MultiPage1.Pages(1).Visible = True
+            Me.MultiPage1.Pages(0).Visible = False
+            Exit Sub
+        Else
+            MsgBox "You haven't generted letter grades", , "Notice"
+            Exit Sub
+        End If
+    ElseIf flag = False Then 'there's no grade
+        If ActiveSheet Is program_ws Then
+            'the activesheet isn't datasheet or users close the workbook after importing it
+            MsgBox "The worksheet you want to analyze is not active. Please select any cell in it or import it again.", , "Program Start"
+            Exit Sub
+        End If
+    
+        Application.ScreenUpdating = False
+        
+        'name the file and range for further using
+        Set datasheet = ActiveSheet
+        datasheet.Names.Add name:="StudentName", RefersTo:=Range(Range("B1"), [b1].End(xlDown))
+        last_col = [a1].End(xlToRight).Column
+        last_row = [a1].End(xlDown).Row
+    
+        'Data range
+        Range([a1], [a1].End(xlToRight)).Select
+        Range(Selection, Selection.End(xlDown)).Select
+        
+        'Styling for Data range to table
+         'check if table hv been formated
+        On Error Resume Next
+        If Not datasheet.ListObjects("Data") Is Nothing Then
+            datasheet.ListObjects.Add(xlSrcRange, Selection, , xlYes).name = _
+                "Data"
+            datasheet.ListObjects("Data").TableStyle = ""
+        End If
+        On Error GoTo 0
+        
+        'sort the data with descending total
+        datasheet.ListObjects("Data").Sort.SortFields. _
+            Add2 Key:=Range("Data[[#All],[Total]]"), SortOn:=xlSortOnValues, _
+            Order:=xlDescending, DataOption:=xlSortNormal
+        With datasheet.ListObjects("Data").Sort
+            .Header = xlYes
+            .MatchCase = False
+            .Orientation = xlTopToBottom
+            .SortMethod = xlPinYin
+            .Apply
+        End With
+        
+        'add difference and grade column
+        add_DifferenceAndGrade_col datasheet
+        
+        'assign grade with instructor preference(default)
+        cal_grade last_col, last_row, "Instructor"
+        
+        'format the datasheet
+        datasheet.Columns.AutoFit
+        
+        summary_table last_col
+        [summarytable].Cells.Font.name = "Calibri"
+        
+        'show the second page of the userform
+        Me.MultiPage1.Pages(1).Visible = True
+        Me.MultiPage1.Pages(0).Visible = False
+        IfSecondUserformShowed = True
+        
+        flag = True 'if haven't generate grade, can't clear or export
+        With system_form
+            .Data_Correctness_btn.Enabled = True
+            .stats_report_btn.Enabled = True
+            .clear_btn.Enabled = True
+        End With
+        
+        Application.ScreenUpdating = True
+    End If
+End Sub
+
+################################################################
+Private Sub clear_btn_Click()
+    'check users has generated grade
+    If flag = False Then
+        MsgBox "You haven't generted letter grades", , "Notice"
+        Exit Sub
+    End If
+
+    clear_all
+    
+    uni_btn.Enabled = True
+    stu_btn.Enabled = True
+    ins_btn.Enabled = False
+    
+    stats_report_btn.Enabled = False
+    
+    clearcolor 'clear the color changed by validating the correctness
+    
+    flag = False 'if false then grade button can work
+End Sub
+
+###########################################################
+Private Sub export_btn_Click()    
+    Application.ScreenUpdating = False
+    Dim ExportFileName As String
+    
+    'copy the report sheet and let users decide the new workbook name and location
+    report_ws.Copy
+    ActiveWorkbook.SaveAs Application.GetSaveAsFilename
+    
+    Application.ScreenUpdating = True
+End Sub
+
+################################################################
+Private Sub exit_btn_Click()
+    Application.ScreenUpdating = False
+    
+    On Error Resume Next
+    'close the imported file (don't specify savechanges arg, let users decide)
+    If Not Workbooks(FileName) Is Nothing Then
+        Workbooks(FileName).Close
+        IfFileImported = False
+    End If
+    
+    'close the userform
+    Unload Me
+    
+    'delete the import data button
+    If Not program_ws.Buttons("ImportData_btn") Is Nothing Then
+        program_ws.Buttons("ImportData_btn").delete
+    End If
+    
+    'delete the startprogram button if it still exist
+    If Not program_ws.Buttons("StartProgram_btn") Is Nothing Then
+        program_ws.Buttons("StartProgram_btn").delete
+    End If
+    
+    On Error GoTo 0
+    
+    'close the program file
+    ThisWorkbook.Saved = True
+    Application.Quit
+    
+    Application.ScreenUpdating = True
+End Sub
