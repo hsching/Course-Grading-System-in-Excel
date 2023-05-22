@@ -1,0 +1,10 @@
+Option Explicit
+
+Private Sub workbook_open()  '(by Cathy)
+    On Error Resume Next 'it may have error if users download the file first time without enable editing
+    Application.OnKey "{F4}", "start"
+    On Error GoTo 0
+    
+    import_data
+    start
+End Sub
