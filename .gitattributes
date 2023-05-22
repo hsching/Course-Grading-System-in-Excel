@@ -1,2 +1,6 @@
-* linguist-vendored
+touch .gitattributes
+vi .gitattributes
+src/main/resources/static/* linguist-vendored
+project-docs/* linguist-documentation
+documented_code.rb linguist-documentation=true
 *.xlsm linguist-vendored=VBA
