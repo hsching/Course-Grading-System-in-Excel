@@ -15,7 +15,7 @@ Private Sub cancel_btn_Click() 'third userform-student preference
 End Sub
 
 ################################################################
-Private Sub grade_btn_Click()
+Private Sub grade_btn_Click()  '(by Cathy, except for some self-created functions)
     'check if users input file to analyze
     On Error Resume Next
     If IfFileImported = False Then
@@ -104,7 +104,7 @@ Private Sub grade_btn_Click()
 End Sub
 
 ################################################################
-Private Sub clear_btn_Click()
+Private Sub clear_btn_Click()  '(by Cathy)
     'check users has generated grade
     If flag = False Then
         MsgBox "You haven't generted letter grades", , "Notice"
@@ -125,7 +125,7 @@ Private Sub clear_btn_Click()
 End Sub
 
 ###########################################################
-Private Sub export_btn_Click()    
+Private Sub export_btn_Click()  '(by Cathy)
     Application.ScreenUpdating = False
     Dim ExportFileName As String
     
@@ -137,7 +137,7 @@ Private Sub export_btn_Click()
 End Sub
 
 ################################################################
-Private Sub exit_btn_Click()
+Private Sub exit_btn_Click()  '(by Cathy)
     Application.ScreenUpdating = False
     
     On Error Resume Next
