@@ -1,0 +1,49 @@
+Option Explicit
+Public program_ws As Worksheet
+Public datasheet As Worksheet
+Public report_ws As Worksheet
+Public IfFileImported As Boolean 'check if users imported data
+Public FileName As String 'imported datafile name
+Public last_col As Integer 'of data range
+Public last_row As Integer 'of data range
+Public cell As Range 'for each loop
+Public i As Integer 'for loop
+Public customA As Double
+Public customB As Double
+Public customC As Double
+Public ImportData_btn As Button
+
+Sub clear_all() '(by Cathy)
+    'check if on the right sheet
+    If ActiveSheet Is program_ws Then
+        MsgBox "Please select the worksheet you want clear.", , "Record Clear"
+        Exit Sub
+    End If
+    
+    On Error Resume Next
+    If Range("Data[[#All],[Differences]]") Is Nothing Then
+        MsgBox "You haven't generated the grade."
+        Exit Sub
+    End If
+    
+    Application.DisplayAlerts = False
+    
+    If Not Range("Data[[#All],[Differences]]") Is Nothing Then
+        Range("Data[[#All],[Differences]]").EntireColumn.delete
+    End If
+    If Not Range("Data[[#All],[grade]]") Is Nothing Then
+        Range("Data[[#All],[grade]]").EntireColumn.delete
+    End If
+    'update last column number
+    last_col = [a1].End(xlToRight).Column
+    
+    On Error GoTo 0
+    Application.DisplayAlerts = True
+    
+    With Cells(1, last_col).Offset(0, 2)
+        Range(.Offset(0, 0), .Offset(14, 5)).Clear
+    End With
+    
+    'clear the descending format
+    ActiveSheet.AutoFilterMode = False    
+End Sub
